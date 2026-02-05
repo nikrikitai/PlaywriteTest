@@ -1,0 +1,18 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@playwright/test": "^1.57.0",
+    "allure-playwright": "^3.4.5"
+  },
+  
+  "scripts": {
+    "test:login": "playwright test tests/login-page.spec.js",
+    "test:login:allure": "playwright test tests/login-page.spec.js --reporter=allure-playwright",
+    "test:login:chrome": "playwright test tests/login-page.spec.js --project=chromium",
+    "test:login:debug": "playwright test tests/login-page.spec.js --debug"
+  }
+  
+
+}
