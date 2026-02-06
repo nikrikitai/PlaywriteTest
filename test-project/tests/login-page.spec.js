@@ -6,7 +6,9 @@ const path = require('path');
 const CONFIG = {
 
     // URL и попытки
-    LOGIN_URL_CONFIG: process.env.LOGIN_PAGE_URL,
+    BASE_URL_CONFIG: process.env.BASE_URL,
+    LOGIN_ENDPOINT_CONFIG: process.env.LOGIN_ENDPOINT,
+    FULL_LOGIN_URL_CONFIG: null,
     MAX_ATTEMPTS_CONFIG: parseInt(process.env.MAX_LOGIN_ATTEMPTS),
 
     // Локаторы
@@ -20,7 +22,8 @@ const CONFIG = {
 
 const REQUIRED_ENV_VARS = [
 
-  'LOGIN_PAGE_URL',
+  'BASE_URL',
+  'LOGIN_ENDPOINT',
   'MAX_LOGIN_ATTEMPTS',
   'PAGE_TITLE_REGEX',
   'EMAIL_LABEL', 
@@ -42,20 +45,31 @@ test.describe('Страница входа на сайт', () => {
             
             if (missingVars.length > 0) {
                 throw new Error(`
+
                     ❌ Не заданы обязательные переменные окружения: ${missingVars.join(', ')}
         
                     Создайте файл .env со следующими переменными:
-                    LOGIN_PAGE_URL=https://ваш-сервер/путь
+                    BASE_URL=https://ваш-сервер.зона
+                    LOGIN_ENDPOINT=/путь/к/странице/входа
                     MAX_LOGIN_ATTEMPTS=5
-                    PAGE_TITLE_REGEX=AICalc - Войти
+                    PAGE_TITLE_REGEX=Заголовок - Войти
                     EMAIL_LABEL=Электронная почта
                     PASSWORD_LABEL=Пароль  
                     BUTTON_TEXT=Войти
                     ERROR_MESSAGE_TEXT=Учетная запись заблокирована
         
                     Или задайте их при запуске:
-                    LOGIN_PAGE_URL=... MAX_LOGIN_ATTEMPTS=... npm test
+                    BASE_URL=... LOGIN_ENDPOINT=... npm test
+
                 `);
+            }
+            
+            if (!CONFIG.BASE_URL_CONFIG.startsWith('http')) {
+                throw new Error(`❌ BASE_URL должен начинаться с http:// или https://`);
+            }
+
+            if (!CONFIG.LOGIN_ENDPOINT_CONFIG.startsWith('/')) {
+                throw new Error(`❌ LOGIN_ENDPOINT должен начинаться с /`);
             }
 
              // Дополнительная проверка числового значения
@@ -64,17 +78,22 @@ test.describe('Страница входа на сайт', () => {
                 throw new Error(`❌ MAX_LOGIN_ATTEMPTS должно быть положительным числом`);
             }
 
+            CONFIG.FULL_LOGIN_URL_CONFIG = `${CONFIG.BASE_URL_CONFIG}${CONFIG.LOGIN_ENDPOINT_CONFIG}`;
+            console.log(`Собранный URL: ${CONFIG.FULL_LOGIN_URL_CONFIG}`);
+
         });
 
         await allure.step('2. Переходим на сайт', async () => {
 
             const titleRegex = new RegExp(CONFIG.PAGE_TITLE_REGEX_CONFIG);
 
-            console.log(`URL: ${CONFIG.LOGIN_URL_CONFIG}`);
+            console.log(`Базовый URL: ${CONFIG.BASE_URL_CONFIG}`);
+            console.log(`Эндпоинт входа: ${CONFIG.LOGIN_ENDPOINT_CONFIG}`);
+            console.log(`Полный URL: ${CONFIG.FULL_LOGIN_URL_CONFIG}`);
             console.log(`Макс. попыток: ${CONFIG.MAX_ATTEMPTS_CONFIG}`);
             console.log(`Заголовок (регекс): ${CONFIG.PAGE_TITLE_REGEX_CONFIG}`);
 
-            await page.goto(CONFIG.LOGIN_URL_CONFIG);
+            await page.goto(CONFIG.FULL_LOGIN_URL_CONFIG);
             await expect(page).toHaveTitle(titleRegex);
         });
         
