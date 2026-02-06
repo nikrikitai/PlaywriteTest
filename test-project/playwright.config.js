@@ -1,4 +1,5 @@
 const { defineConfig, devices } = require('@playwright/test');
+require('dotenv').config();
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -12,6 +13,9 @@ module.exports = defineConfig({
   ],
   
   use: {
+
+    baseURL: process.env.BASE_URL || 'https://calc.hr-rt.ru',
+    
     // Скриншоты при падении
     screenshot: 'only-on-failure',
     

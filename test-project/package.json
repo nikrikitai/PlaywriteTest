@@ -1,18 +1,21 @@
 {
   "name": "test-project",
   "version": "1.0.0",
-
   "dependencies": {
     "@playwright/test": "^1.57.0",
-    "allure-playwright": "^3.4.5"
+    "allure-playwright": "^3.4.5",
+    "dotenv": "^16.0.0" 
   },
-  
   "scripts": {
     "test:login": "playwright test tests/login-page.spec.js",
     "test:login:allure": "playwright test tests/login-page.spec.js --reporter=allure-playwright",
     "test:login:chrome": "playwright test tests/login-page.spec.js --project=chromium",
-    "test:login:debug": "playwright test tests/login-page.spec.js --debug"
+    "test:login:debug": "playwright test tests/login-page.spec.js --debug",
+    "test": "playwright test",
+    "test:ci": "BASE_URL=https://prod-server.com MAX_LOGIN_ATTEMPTS=5 playwright test",
+    "test:local": "playwright test --config=playwright.config.js"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.4"
   }
-  
-
 }

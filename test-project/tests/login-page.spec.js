@@ -3,22 +3,86 @@ const { allure } = require('allure-playwright');
 const fs = require('fs');
 const path = require('path');
 
+const CONFIG = {
+
+    // URL и попытки
+    LOGIN_URL_CONFIG: process.env.LOGIN_PAGE_URL,
+    MAX_ATTEMPTS_CONFIG: parseInt(process.env.MAX_LOGIN_ATTEMPTS),
+
+    // Локаторы
+    PAGE_TITLE_REGEX_CONFIG: process.env.PAGE_TITLE_REGEX,
+    EMAIL_LABEL_CONFIG: process.env.EMAIL_LABEL,
+    PASSWORD_LABEL_CONFIG: process.env.PASSWORD_LABEL,
+    BUTTON_TEXT_CONFIG: process.env.BUTTON_TEXT,
+    ERROR_MESSAGE_TEXT_CONFIG: process.env.ERROR_MESSAGE_TEXT
+
+};
+
+const REQUIRED_ENV_VARS = [
+
+  'LOGIN_PAGE_URL',
+  'MAX_LOGIN_ATTEMPTS',
+  'PAGE_TITLE_REGEX',
+  'EMAIL_LABEL', 
+  'PASSWORD_LABEL',
+  'BUTTON_TEXT',
+  'ERROR_MESSAGE_TEXT'
+
+];
+
 test.describe('Страница входа на сайт', () => {
 
     test('ID: IN_ERR01 - Вывод ошибки при не верном введени данных', async ({ page }) => {
         await allure.story('Ввод данных');
         await allure.severity('critical');
 
-        await allure.step('1. Переходим на сайт', async () => {
-            await page.goto('https://calc.hr-rt.ru/identity/login?next=/');
-            await expect(page).toHaveTitle(/AICalc - Войти/);
+        await allure.step('1. Проверка данных окружения', async () => {
+            
+            const missingVars = REQUIRED_ENV_VARS.filter(varName => !process.env[varName]);
+            
+            if (missingVars.length > 0) {
+                throw new Error(`
+                    ❌ Не заданы обязательные переменные окружения: ${missingVars.join(', ')}
+        
+                    Создайте файл .env со следующими переменными:
+                    LOGIN_PAGE_URL=https://ваш-сервер/путь
+                    MAX_LOGIN_ATTEMPTS=5
+                    PAGE_TITLE_REGEX=AICalc - Войти
+                    EMAIL_LABEL=Электронная почта
+                    PASSWORD_LABEL=Пароль  
+                    BUTTON_TEXT=Войти
+                    ERROR_MESSAGE_TEXT=Учетная запись заблокирована
+        
+                    Или задайте их при запуске:
+                    LOGIN_PAGE_URL=... MAX_LOGIN_ATTEMPTS=... npm test
+                `);
+            }
+
+             // Дополнительная проверка числового значения
+            const maxAttempts = parseInt(CONFIG.MAX_ATTEMPTS_CONFIG);
+            if (isNaN(maxAttempts) || maxAttempts <= 0) {
+                throw new Error(`❌ MAX_LOGIN_ATTEMPTS должно быть положительным числом`);
+            }
+
+        });
+
+        await allure.step('2. Переходим на сайт', async () => {
+
+            const titleRegex = new RegExp(CONFIG.PAGE_TITLE_REGEX_CONFIG);
+
+            console.log(`URL: ${CONFIG.LOGIN_URL_CONFIG}`);
+            console.log(`Макс. попыток: ${CONFIG.MAX_ATTEMPTS_CONFIG}`);
+            console.log(`Заголовок (регекс): ${CONFIG.PAGE_TITLE_REGEX_CONFIG}`);
+
+            await page.goto(CONFIG.LOGIN_URL_CONFIG);
+            await expect(page).toHaveTitle(titleRegex);
         });
         
-        const EmailField = page.getByLabel('Электронная почта', { exact: false });
-        const PasswordField = page.getByLabel('Пароль', { exact: false });
-        const Button = page.getByRole('button', { name: 'Войти' });
+        const EmailField = page.getByLabel(CONFIG.EMAIL_LABEL_CONFIG, { exact: false });
+        const PasswordField = page.getByLabel(CONFIG.PASSWORD_LABEL_CONFIG, { exact: false });
+        const Button = page.getByRole('button', { name: CONFIG.BUTTON_TEXT_CONFIG });
 
-        await allure.step('2. Проверяем состояние полей для ввода данных', async () => {
+        await allure.step('3. Проверяем состояние полей для ввода данных', async () => {
             
             await expect(EmailField).toBeVisible();
 
@@ -33,13 +97,12 @@ test.describe('Страница входа на сайт', () => {
         const fakeEmail = `wrong${Date.now()}@test.com`;
         const fakePassword = Math.random().toString(36).slice(2, 10);
 
-        const maxAttempts = 6; 
         let attempts = 0;
         let ErrorPage = false;
 
-        await allure.step('3. Проводим тестирование', async () => { 
+        await allure.step('4. Проводим тестирование', async () => { 
         
-            while (attempts < maxAttempts && !ErrorPage) {
+            while (attempts < CONFIG.MAX_ATTEMPTS_CONFIG && !ErrorPage) {
                 
                 const emailValue = await EmailField.inputValue();
                 const passwordValue = await PasswordField.inputValue();
@@ -60,7 +123,7 @@ test.describe('Страница входа на сайт', () => {
                     await page.screenshot(), 'image/png');
                 }
 
-                const errorMessage = page.locator('text=Учетная запись заблокирована');
+                const errorMessage = page.locator(`text=${CONFIG.ERROR_MESSAGE_TEXT_CONFIG}`);
 
                 const isErrorMessageVisible = await errorMessage.isVisible().catch(() => false);
 
@@ -81,7 +144,7 @@ test.describe('Страница входа на сайт', () => {
             }
 
             if (ErrorPage) {
-                const errorMessage = page.locator('text=Учетная запись заблокирована');
+                const errorMessage = page.locator(`text=${CONFIG.ERROR_MESSAGE_TEXT_CONFIG}`);
                 await expect(errorMessage).toBeVisible();
             
                 await expect(EmailField).not.toBeVisible();
@@ -89,8 +152,8 @@ test.describe('Страница входа на сайт', () => {
                 await expect(Button).not.toBeVisible();
             } else {
                 console.log('❌ Тест не пройден: аккаунт не заблокирован');
-                console.log(`Аккаунт НЕ заблокирован после ${maxAttempts-1} попыток`);
-                throw new Error(`❌ ТЕСТ ПРОВАЛЕН: Аккаунт должен был заблокироваться после ${maxAttempts-1} попыток неверного входа.`);
+                console.log(`Аккаунт НЕ заблокирован после ${CONFIG.MAX_ATTEMPTS_CONFIG} попыток`);
+                throw new Error(`❌ ТЕСТ ПРОВАЛЕН: Аккаунт должен был заблокироваться после ${CONFIG.MAX_ATTEMPTS_CONFIG} попыток неверного входа.`);
             }
 
         });
