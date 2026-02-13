@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test:login": "playwright test tests/login-page.spec.js",
+    "test:queue": "playwright test tests/test_queue.spec.js",
     "test:login:allure": "playwright test tests/login-page.spec.js --reporter=allure-playwright",
     "test:login:chrome": "playwright test tests/login-page.spec.js --project=chromium",
     "test:login:debug": "playwright test tests/login-page.spec.js --debug",
