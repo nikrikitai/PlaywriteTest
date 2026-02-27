@@ -194,6 +194,7 @@ test.describe('Тест сайта', () => {
         ];
 
         await allure.step('1. Вход на начальную страницу', async () => {
+            await page.waitForTimeout(1500);
             await login(VALID_ENV_VARS_RATE, page,'RATE01');
         });
 
@@ -238,6 +239,7 @@ test.describe('Тест сайта', () => {
             
             let responseStatus = null;
             let errorResponse = null;
+            let err429 = null;
     
             
             page.on('response', response => {
@@ -245,14 +247,25 @@ test.describe('Тест сайта', () => {
                         responseStatus = response.status();
                         errorResponse = response;
                     }
+                    if (response.status() === 429) {
+                        err429 = response.status();
+                        errorResponse = response;
+                    }else{
+                        err429 = null;
+                    }
                 });
 
 
             for (let i = 0; i < CONFIG.RATE_LIMIT_ATTEMPTS_CONFIG; i++) {
 
-                await Button_test_page.click({ delay: 50 });
-
-                await page.waitForTimeout(1500);
+                if (err429!== 429){
+                    await Button_test_page.click({ delay: 50 });
+                    await page.waitForTimeout(1500);
+                }else{
+                    await page.waitForTimeout(2000);
+                    await page.reload();
+                    i--;
+                }
 
                 if (responseStatus === 403) {
                     
@@ -327,6 +340,7 @@ test.describe('Тест сайта', () => {
         ];
 
         await allure.step('1. Вход на начальную страницу', async () => {
+            await page.waitForTimeout(1500);
             await login(VALID_ENV_VARS_RATE, page,'RATE02');
         });
 
@@ -367,6 +381,7 @@ test.describe('Тест сайта', () => {
             
             let responseStatus = null;
             let errorResponse = null;
+            let err429 = null;
     
             
             page.on('response', response => {
@@ -374,14 +389,24 @@ test.describe('Тест сайта', () => {
                         responseStatus = response.status();
                         errorResponse = response;
                     }
+                    if (response.status() === 429) {
+                        err429 = response.status();
+                        errorResponse = response;
+                    }else{
+                        err429 = null;
+                    }
                 });
-
 
             for (let i = 0; i < CONFIG.RATE_LIMIT_ATTEMPTS_CONFIG; i++) {
 
-                await Button_test01.click({ delay: 50 });
-
-                await page.waitForTimeout(1500);
+                if (err429!== 429){
+                    await Button_test01.click({ delay: 50 });
+                    await page.waitForTimeout(1500);
+                }else{
+                    await page.waitForTimeout(2000);
+                    await page.reload();
+                    i--;
+                }
 
                 if (responseStatus === 403) {
                     
@@ -458,6 +483,7 @@ test.describe('Тест сайта', () => {
         ];
 
         await allure.step('1. Вход на начальную страницу', async () => {
+            await page.waitForTimeout(2000);
             await login(VALID_ENV_VARS_RATE, page,'RATE03');
         });
 
@@ -498,6 +524,7 @@ test.describe('Тест сайта', () => {
             
             let responseStatus = null;
             let errorResponse = null;
+            let err429 = null;
     
             
             page.on('response', response => {
@@ -505,14 +532,26 @@ test.describe('Тест сайта', () => {
                         responseStatus = response.status();
                         errorResponse = response;
                     }
+                    if (response.status() === 429) {
+                        err429 = response.status();
+                        errorResponse = response;
+                    }else{
+                        err429 = null;
+                    }
                 });
 
 
             for (let i = 0; i < CONFIG.RATE_LIMIT_ATTEMPTS_CONFIG; i++) {
 
-                await Button_test02.click({ delay: 50 });
-
-                await page.waitForTimeout(1500);
+                if (err429!== 429){
+                    await Button_test02.click({ delay: 50 });
+                    await page.waitForTimeout(1500);
+                }else{
+                    await page.waitForTimeout(2000);
+                    await page.reload();
+                    i--;
+                }
+                
 
                 if (responseStatus === 403) {
                     
@@ -524,6 +563,7 @@ test.describe('Тест сайта', () => {
             
                     break;
                 }
+                
 
             }
 

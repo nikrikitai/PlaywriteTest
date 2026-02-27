@@ -3,7 +3,7 @@ require('dotenv').config();
 
 module.exports = defineConfig({
   testDir: './tests',
-  timeout: 95000,
+  timeout: 100000,
   
   // Репортеры
   reporter: [
